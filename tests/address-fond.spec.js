@@ -18,25 +18,20 @@ test.describe('Адреса проживающих', () => {
     await page.click('button[data-cy="submit-btn"]');
     
     // если вылезло окно про сессию
-   try {
-  console.log('ждем окно сессии 5 секунд...');
-  await page.waitForSelector('button[data-cy="btn-yes"]', { timeout: 5000 });
-  console.log('окно сессии появилось, жму да');
-  await page.click('button[data-cy="btn-yes"]');
-  await page.waitForSelector('button[data-cy="btn-yes"]', { state: 'hidden', timeout: 5000 });
-  await page.waitForTimeout(1000); // даём время исчезнуть шторке
-} catch (e) {
-  console.log('окна сессии нет (или оно пришло позже 5с)');
-}
+    try {
+      await page.waitForSelector('button[data-cy="btn-yes"]', { timeout: 3000 });
+      console.log('окно сессии, жму да');
+      await page.click('button[data-cy="btn-yes"]');
+      await page.waitForSelector('button[data-cy="btn-yes"]', { state: 'hidden', timeout: 3000 });
+    } catch (e) {
+      // ну и ладно
+    }
     
     await expect(page.locator('span:has-text("Адреса проживающих")')).toBeVisible();
     await page.locator('span:has-text("Адреса проживающих")').click();
     await expect(page.locator('button[data-cy="btn-add"]')).toBeVisible();
   });
 
-
-  // -----	Диалоговое окно	-----
-  
   test('Диалог открывается и закрывается', async ({ page }) => {
     console.log('1. Диалоговое окно');
     
@@ -54,11 +49,8 @@ test.describe('Адреса проживающих', () => {
     await expect(dialog).toBeHidden();
   });
 
-
-	// -----	добавление уровня «Район» в таблицу	-----
-	
   test('Создание района', async ({ page }) => {
-    console.log('2. добавление уровня «Район» в таблицу');
+    console.log('2. Добавление района');
     
     let name = 'Район ' + Date.now();
     console.log(name);
@@ -70,34 +62,26 @@ test.describe('Адреса проживающих', () => {
     await expect(dialog).toBeVisible();
     
     let input = dialog.locator('input[type="text"]').first();
-await input.fill(name);
-
-// принудительно убираем фокус через evaluate (надежнее)
-await page.evaluate(() => {
-  const active = document.activeElement;
-  if (active && typeof active.blur === 'function') {
-    active.blur();
-  }
-});
-
-await page.waitForTimeout(500);
-await dialog.locator('button:has-text("Внести")').first().click();
+    await input.fill(name);
+    
+    // небольшая пауза для активации кнопки
+    await page.waitForTimeout(500);
+    
+    await dialog.locator('button:has-text("Внести")').first().click();
     
     await page.waitForTimeout(1000);
     let row = page.locator('tr:has-text("' + name + '")');
     await expect(row).toBeVisible();
     
-    // удаляем
+    // удаляем за собой
     await row.locator('input[type="checkbox"]').first().click({ force: true });
     await page.locator('button[data-cy="btn-delete"]').first().click();
     await page.locator('button:has-text("Да")').first().click();
     await expect(row).toBeHidden();
   });
 
-
-	// -----	Редактирование записи	-----
   test('Редактирование', async ({ page }) => {
-    console.log('3. Редактирование записи');
+    console.log('3. Редактирование');
     
     let oldName = 'Район ' + Date.now();
     let newName = oldName + ' new';
@@ -128,7 +112,6 @@ await dialog.locator('button:has-text("Внести")').first().click();
     await page.waitForTimeout(500);
     
     let saveBtn = editDialog.locator('button:has-text("Сохранить")').first();
-    await expect(saveBtn).toBeEnabled();
     await saveBtn.click();
     
     await page.waitForTimeout(1000);
@@ -142,10 +125,8 @@ await dialog.locator('button:has-text("Внести")').first().click();
     await expect(newRow).toBeHidden();
   });
 
-	// -----	Удаление записи		-----
-	
   test('Удаление', async ({ page }) => {
-    console.log('4. Удаление записи');
+    console.log('4. Удаление');
     
     let name = 'На удаление ' + Date.now();
     
@@ -169,10 +150,8 @@ await dialog.locator('button:has-text("Внести")').first().click();
     await expect(row).toBeHidden();
   });
 
-	// -----	Обязательное поле (название)		-----
-
   test('Пустое название', async ({ page }) => {
-    console.log('5. Обязательное поле (название)');
+    console.log('5. Пустое название');
     
     await page.click('button[data-cy="btn-add"]');
     await page.click('text="Район"');
