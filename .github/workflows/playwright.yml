@@ -1,15 +1,22 @@
 name: Playwright Tests
 
 on:
-  workflow_dispatch:  # ручной запуск
+  workflow_dispatch:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
 
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
     
     steps:
       - uses: actions/checkout@v4
