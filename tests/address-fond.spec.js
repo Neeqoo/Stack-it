@@ -18,14 +18,16 @@ test.describe('Адреса проживающих', () => {
     await page.click('button[data-cy="submit-btn"]');
     
     // если вылезло окно про сессию
-    try {
-      await page.waitForSelector('button[data-cy="btn-yes"]', { timeout: 3000 });
-      console.log('окно сессии, жму да');
-      await page.click('button[data-cy="btn-yes"]');
-      await page.waitForSelector('button[data-cy="btn-yes"]', { state: 'hidden', timeout: 3000 });
-    } catch (e) {
-      // ну и ладно
-    }
+   try {
+  console.log('ждем окно сессии 5 секунд...');
+  await page.waitForSelector('button[data-cy="btn-yes"]', { timeout: 5000 });
+  console.log('окно сессии появилось, жму да');
+  await page.click('button[data-cy="btn-yes"]');
+  await page.waitForSelector('button[data-cy="btn-yes"]', { state: 'hidden', timeout: 5000 });
+  await page.waitForTimeout(1000); // даём время исчезнуть шторке
+} catch (e) {
+  console.log('окна сессии нет (или оно пришло позже 5с)');
+}
     
     await expect(page.locator('span:has-text("Адреса проживающих")')).toBeVisible();
     await page.locator('span:has-text("Адреса проживающих")').click();
@@ -68,8 +70,13 @@ test.describe('Адреса проживающих', () => {
     await expect(dialog).toBeVisible();
     
     let input = dialog.locator('input[type="text"]').first();
-    await input.fill(name);
-    await dialog.locator('button:has-text("Внести")').first().click();
+	await input.fill(name);
+
+	// убираем фокус, чтобы кнопка активировалась
+	await dialog.locator('.v-card').first().click();
+	await page.waitForTimeout(500);
+
+	await dialog.locator('button:has-text("Внести")').first().click();
     
     await page.waitForTimeout(1000);
     let row = page.locator('tr:has-text("' + name + '")');
