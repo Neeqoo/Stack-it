@@ -70,13 +70,18 @@ test.describe('Адреса проживающих', () => {
     await expect(dialog).toBeVisible();
     
     let input = dialog.locator('input[type="text"]').first();
-	await input.fill(name);
+await input.fill(name);
 
-	// убираем фокус, чтобы кнопка активировалась
-	await dialog.locator('.v-card').first().click();
-	await page.waitForTimeout(500);
+// принудительно убираем фокус через evaluate (надежнее)
+await page.evaluate(() => {
+  const active = document.activeElement;
+  if (active && typeof active.blur === 'function') {
+    active.blur();
+  }
+});
 
-	await dialog.locator('button:has-text("Внести")').first().click();
+await page.waitForTimeout(500);
+await dialog.locator('button:has-text("Внести")').first().click();
     
     await page.waitForTimeout(1000);
     let row = page.locator('tr:has-text("' + name + '")');
